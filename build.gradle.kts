@@ -58,6 +58,7 @@ enum class Platforms(val classifier: String) {
     LINUX("natives-linux"),
     LINUX_ARM64("natives-linux-arm64"),
     LINUX_ARM32("natives-linux-arm32"),
+    LINUX_LOONG64("natives-linux-loong64"),
     LINUX_PPC64LE("natives-linux-ppc64le"),
     LINUX_RISCV64("natives-linux-riscv64"),
     MACOS("natives-macos"),
@@ -142,7 +143,7 @@ enum class Module(
         "lwjgl-ktx", "LWJGL - KTX (Khronos Texture) bindings",
         "A lightweight container for textures for OpenGL®, Vulkan® and other GPU APIs.",
         Platforms.FREEBSD,
-        Platforms.LINUX, Platforms.LINUX_ARM64, Platforms.LINUX_ARM32, Platforms.LINUX_PPC64LE, Platforms.LINUX_RISCV64,
+        Platforms.LINUX, Platforms.LINUX_ARM64, Platforms.LINUX_ARM32, Platforms.LINUX_LOONG64, Platforms.LINUX_PPC64LE, Platforms.LINUX_RISCV64,
         Platforms.MACOS, Platforms.MACOS_ARM64,
         Platforms.WINDOWS, Platforms.WINDOWS_ARM64
     ),
@@ -218,7 +219,7 @@ enum class Module(
         "lwjgl-openxr", "LWJGL - OpenXR bindings",
         "A royalty-free, open standard that provides high-performance access to Augmented Reality (AR) and Virtual Reality (VR)—collectively known as XR—platforms and devices.",
         Platforms.FREEBSD,
-        Platforms.LINUX, Platforms.LINUX_ARM64, Platforms.LINUX_ARM32, Platforms.LINUX_PPC64LE, Platforms.LINUX_RISCV64,
+        Platforms.LINUX, Platforms.LINUX_ARM64, Platforms.LINUX_ARM32, Platforms.LINUX_LOONG64, Platforms.LINUX_PPC64LE, Platforms.LINUX_RISCV64,
         Platforms.WINDOWS, Platforms.WINDOWS_X86, Platforms.WINDOWS_ARM64
     ),
     OPUS(
@@ -235,7 +236,7 @@ enum class Module(
         "lwjgl-remotery", "LWJGL - Remotery bindings",
         "A realtime CPU/GPU profiler hosted in a single C file with a viewer that runs in a web browser.",
         Platforms.FREEBSD,
-        Platforms.LINUX, Platforms.LINUX_ARM64, Platforms.LINUX_ARM32, Platforms.LINUX_PPC64LE, Platforms.LINUX_RISCV64,
+        Platforms.LINUX, Platforms.LINUX_ARM64, Platforms.LINUX_ARM32, Platforms.LINUX_LOONG64, Platforms.LINUX_PPC64LE, Platforms.LINUX_RISCV64,
         Platforms.MACOS, Platforms.MACOS_ARM64,
         Platforms.WINDOWS, Platforms.WINDOWS_X86
     ),

@@ -1130,7 +1130,7 @@
                         <mkdir dir="${destination}"/>
                     </quiet>
                     <get
-                        src="https://build.lwjgl.org/${build.type}/${platform.remote.s3}/@{arch}/@{file}"
+                        src="https://mirrors.loong64.com/lwjgl/${build.type}/${platform.remote.s3}/@{arch}/@{file}"
                         dest="${destination}"
                         usetimestamp="true"
                     />
@@ -1212,6 +1212,7 @@
         <element name="linux-content" optional="true"/>
         <element name="linux-arm64-content" optional="true"/>
         <element name="linux-arm32-content" optional="true"/>
+        <element name="linux-loong64-content" optional="true"/>
         <element name="linux-ppc64le-content" optional="true"/>
         <element name="linux-riscv64-content" optional="true"/>
         <element name="macos-content" optional="true"/>
@@ -1246,6 +1247,9 @@
 
                 <get-release platform="linux" arch="arm32" file="lib@{native-library}.so" if:set="auto-natives"/>
                 <get-release platform="linux" arch="arm32" file="lib@{native-library}.so.git" if:set="git-revision"/>
+
+                <get-release platform="linux" arch="loong64" file="lib@{native-library}.so" if:set="auto-natives"/>
+                <get-release platform="linux" arch="loong64" file="lib@{native-library}.so.git" if:set="git-revision"/>
 
                 <get-release platform="linux" arch="ppc64le" file="lib@{native-library}.so" if:set="auto-natives"/>
                 <get-release platform="linux" arch="ppc64le" file="lib@{native-library}.so.git" if:set="git-revision"/>
@@ -1323,6 +1327,9 @@
                     <natives-jar name="@{name}" title="@{title}" platform="linux-arm32" path="linux/arm32" type="so">
                         <linux-arm32-content/>
                     </natives-jar>
+                    <natives-jar name="@{name}" title="@{title}" platform="linux-loong64" path="linux/loong64" type="so">
+                        <linux-loong64-content/>
+                    </natives-jar>
                     <natives-jar name="@{name}" title="@{title}" platform="linux-ppc64le" path="linux/ppc64le" type="so">
                         <linux-ppc64le-content/>
                     </natives-jar>
@@ -1360,6 +1367,7 @@
         <element name="linux-arm32" optional="true"/>
         <element name="linux-ppc64le" optional="true"/>
         <element name="linux-riscv64" optional="true"/>
+        <element name="linux-loong64" optional="true"/>
         <element name="macos" optional="true"/>
         <element name="macos-arm64" optional="true"/>
         <element name="windows" optional="true"/>
@@ -1388,6 +1396,7 @@
                 <linux-content><linux/></linux-content>
                 <linux-arm64-content><linux-arm64/></linux-arm64-content>
                 <linux-arm32-content><linux-arm32/></linux-arm32-content>
+                <linux-loong64-content><linux-loong64/></linux-loong64-content>
                 <linux-ppc64le-content><linux-ppc64le/></linux-ppc64le-content>
                 <linux-riscv64-content><linux-riscv64/></linux-riscv64-content>
                 <macos-content><macos/></macos-content>
@@ -1641,6 +1650,10 @@
                 <get-release platform="linux" arch="arm32" file="libassimp.so.git"/>
                 <get-release platform="linux" arch="arm32" file="libdraco.so"/>
 
+                <get-release platform="linux" arch="loong64" file="libassimp.so"/>
+                <get-release platform="linux" arch="loong64" file="libassimp.so.git"/>
+                <get-release platform="linux" arch="loong64" file="libdraco.so"/>
+
                 <get-release platform="linux" arch="ppc64le" file="libassimp.so"/>
                 <get-release platform="linux" arch="ppc64le" file="libassimp.so.git"/>
                 <get-release platform="linux" arch="ppc64le" file="libdraco.so"/>
@@ -1697,6 +1710,9 @@
 
                 <get-release platform="linux" arch="arm32" file="libglfw.so"/>
                 <get-release platform="linux" arch="arm32" file="libglfw.so.git"/>
+
+                <get-release platform="linux" arch="loong64" file="libglfw.so"/>
+                <get-release platform="linux" arch="loong64" file="libglfw.so.git"/>
 
                 <get-release platform="linux" arch="ppc64le" file="libglfw.so"/>
                 <get-release platform="linux" arch="ppc64le" file="libglfw.so.git"/>
@@ -1820,6 +1836,9 @@
                 <get-release platform="linux" arch="arm32" file="libktx.so"/>
                 <get-release platform="linux" arch="arm32" file="libktx.so.git"/>
 
+                <get-release platform="linux" arch="loong64" file="libktx.so"/>
+                <get-release platform="linux" arch="loong64" file="libktx.so.git"/>
+
                 <get-release platform="linux" arch="ppc64le" file="libktx.so"/>
                 <get-release platform="linux" arch="ppc64le" file="libktx.so.git"/>
 
@@ -1869,6 +1888,7 @@
                 <get-release platform="linux" arch="x64" file="liblwjgl_nfd_portal.so"/>
                 <get-release platform="linux" arch="arm64" file="liblwjgl_nfd_portal.so"/>
                 <get-release platform="linux" arch="arm32" file="liblwjgl_nfd_portal.so"/>
+                <get-release platform="linux" arch="loong64" file="liblwjgl_nfd_portal.so"/>
                 <get-release platform="linux" arch="ppc64le" file="liblwjgl_nfd_portal.so"/>
                 <get-release platform="linux" arch="riscv64" file="liblwjgl_nfd_portal.so"/>
             </natives>
@@ -1894,6 +1914,9 @@
 
                 <get-release platform="linux" arch="arm32" file="libopenal.so"/>
                 <get-release platform="linux" arch="arm32" file="libopenal.so.git"/>
+
+                <get-release platform="linux" arch="loong64" file="libopenal.so"/>
+                <get-release platform="linux" arch="loong64" file="libopenal.so.git"/>
 
                 <get-release platform="linux" arch="ppc64le" file="libopenal.so"/>
                 <get-release platform="linux" arch="ppc64le" file="libopenal.so.git"/>
@@ -1942,6 +1965,9 @@
                 <get-release platform="linux" arch="arm32" file="libopenxr_loader.so"/>
                 <get-release platform="linux" arch="arm32" file="libopenxr_loader.so.git"/>
 
+                <get-release platform="linux" arch="loong64" file="libopenxr_loader.so"/>
+                <get-release platform="linux" arch="loong64" file="libopenxr_loader.so.git"/>
+
                 <get-release platform="linux" arch="ppc64le" file="libopenxr_loader.so"/>
                 <get-release platform="linux" arch="ppc64le" file="libopenxr_loader.so.git"/>
 
@@ -1973,6 +1999,7 @@
                 <get-release platform="linux" arch="x64" file="liblwjgl_remotery.so"/>
                 <get-release platform="linux" arch="arm64" file="liblwjgl_remotery.so"/>
                 <get-release platform="linux" arch="arm32" file="liblwjgl_remotery.so"/>
+                <get-release platform="linux" arch="loong64" file="liblwjgl_remotery.so"/>
                 <get-release platform="linux" arch="ppc64le" file="liblwjgl_remotery.so"/>
                 <get-release platform="linux" arch="riscv64" file="liblwjgl_remotery.so"/>
 
