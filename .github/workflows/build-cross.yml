@@ -1,0 +1,314 @@
+# Builds LWJGL and runs tests.
+# No artifacts are uploaded, see LWJGL-CI/lwjgl3 for that.
+name: LWJGL Build (Cross)
+
+on:
+  workflow_dispatch:
+  push:
+    # tags:
+      # - "*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ANT_OPTS: -Xmx1G
+  LWJGL_BUILD_TYPE: stable
+
+jobs:
+  cache-kotlinc:
+    name: Compile templates and cache kotlinc output
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 3
+          persist-credentials: false
+      - name: Setup Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: 'zulu'
+          java-version: '8'
+          check-latest: true
+      - name: Compile templates
+        run: |
+          git clone https://github.com/LWJGL-CI/OculusSDK.git ../OculusSDK
+          ant -emacs compile-templates
+      - name: Cache kotlinc output
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            bin/classes/generator
+            bin/classes/templates
+          key: cache-kotlinc-${{ github.sha }}
+          enableCrossOsArchive: true
+
+  linux:
+    name: Linux
+    needs: cache-kotlinc
+    runs-on: ubuntu-latest
+    container: debian:trixie
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 3
+          persist-credentials: false
+      - name: Setup Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: 'zulu'
+          java-version: '8'
+          check-latest: true
+      - name: Install dependencies # make is necessary for -flto=auto
+        run: |
+          apt-get -yq update
+          DEBIAN_FRONTEND=noninteractive apt-get -yq install ant curl git zstd make \
+            gcc \
+            g++ \
+            libgtk-3-dev \
+            libatk-bridge2.0-dev \
+            libgdk-pixbuf-2.0-dev \
+            libglu-dev \
+            libgl1 \
+            libglx-mesa0 \
+            libx11-dev \
+            libxt-dev \
+            libdbus-1-dev
+          git config --global --add safe.directory $(pwd)
+      - name: Restore kotlinc output
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            bin/classes/generator
+            bin/classes/templates
+          key: cache-kotlinc-${{ github.sha }}
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
+      - name: Generate bindings
+        run: ant -emacs clean-generated generate
+      - name: Build Java
+        run: ant -emacs compile
+      - name: Build native
+        run: |
+          ant -emacs compile-native -Dgcc.version.print=true
+      - name: Upload Linux natives
+        uses: actions/upload-artifact@v7
+        with:
+          name: natives-linux-x64
+          path: bin/libs/native/
+          if-no-files-found: error
+
+  linux-cross:
+    name: Linux Cross
+    needs: cache-kotlinc
+    runs-on: ubuntu-latest
+    container: debian:trixie
+    strategy:
+      fail-fast: false
+      matrix:
+        ARCH: [arm64, loong64, riscv64]
+        include:
+          - ARCH: arm64
+            CROSS_ARCH: arm64
+            TRIPLET: aarch64-linux-gnu
+            GCC: 14
+          - ARCH: loong64
+            CROSS_ARCH: loong64
+            TRIPLET: loongarch64-linux-gnu
+            GCC: 14
+          - ARCH: riscv64
+            CROSS_ARCH: riscv64
+            TRIPLET: riscv64-linux-gnu
+            GCC: 14
+    env:
+      LWJGL_BUILD_ARCH: ${{matrix.ARCH}}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 3
+          persist-credentials: false
+      - name: Setup Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: 'zulu'
+          java-version: '8'
+          check-latest: true
+      - name: Install dependencies # make is necessary for -flto=auto
+        run: |
+          apt-get -yq update
+          apt-get -yq install ant curl git zstd make \
+            gcc-${{matrix.GCC}}-${{matrix.TRIPLET}} \
+            g++-${{matrix.GCC}}-${{matrix.TRIPLET}} \
+            libc6-dev-${{matrix.CROSS_ARCH}}-cross
+          git config --global --add safe.directory $(pwd)
+      - name: Prepare Debian Repository for loong64
+        if: matrix.ARCH == 'loong64'
+        run: |
+          cat > /etc/apt/sources.list.d/trixie-loong64.sources << "EOF"
+          Types: deb
+          # http://mirrors.loong64.com/debian
+          URIs: http://mirrors.loong64.com/debian
+          Suites: trixie trixie-updates
+          Components: main
+          # Signed-By: /usr/share/keyrings/debian-loong64-non-official-archive-keyring.pgp
+
+          Types: deb
+          # http://mirrors.loong64.com/debian-security
+          URIs: http://mirrors.loong64.com/debian-security
+          Suites: trixie-security
+          Components: main
+          # Signed-By: /usr/share/keyrings/debian-loong64-non-official-archive-keyring.pgp
+          EOF
+          dpkg --add-architecture loong64 && \
+          apt-get update -o Acquire::AllowInsecureRepositories=true && \
+          apt-get install -y --allow-unauthenticated curl debian-loong64-non-official-archive-keyring && \
+          sed -i 's/# Signed-By/Signed-By/g' /etc/apt/sources.list.d/trixie-loong64.sources
+          apt-get update
+      - name: Prepare cross-compilation for ${{matrix.CROSS_ARCH}}
+        if: matrix.ARCH != 'loong64'
+        run: |
+          dpkg --add-architecture ${{matrix.CROSS_ARCH}}
+          apt-get update
+      - name: Install cross-compilation dependencies
+        run: |
+          DEBIAN_FRONTEND=noninteractive apt-get -yq install \
+            libgtk-3-dev:${{matrix.CROSS_ARCH}} \
+            libatk-bridge2.0-dev:${{matrix.CROSS_ARCH}} \
+            libgdk-pixbuf-2.0-dev:${{matrix.CROSS_ARCH}} \
+            libglu-dev:${{matrix.CROSS_ARCH}} \
+            libgl1:${{matrix.CROSS_ARCH}} \
+            libglx-mesa0:${{matrix.CROSS_ARCH}} \
+            libx11-dev:${{matrix.CROSS_ARCH}} \
+            libxt-dev:${{matrix.CROSS_ARCH}} \
+            libdbus-1-dev:${{matrix.CROSS_ARCH}}
+      - name: Build libffi for loong64
+        if: matrix.ARCH == 'loong64'
+        run: |
+          FFI_VERSION=$(sed -nE 's/^[[:space:]]*StringConstant\("VERSION_STRING"[[:space:]]*\.\.[[:space:]]*"([^"]+)"\).*/\1/p' \
+            modules/lwjgl/core/src/templates/kotlin/core/libffi/templates/LibFFI.kt)
+          if [[ ! "$FFI_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Failed to read a valid libffi version from LibFFI.kt" >&2
+            exit 1
+          fi
+          echo "Building libffi $FFI_VERSION"
+          curl -fL --retry 3 "https://github.com/libffi/libffi/releases/download/v$FFI_VERSION/libffi-$FFI_VERSION.tar.gz" | tar -xz 
+          cd "libffi-$FFI_VERSION"
+          ./configure \
+            --host=${{ matrix.TRIPLET }} \
+            --disable-shared \
+            --enable-static \
+            --with-pic \
+            --disable-docs \
+            CC="${{ matrix.TRIPLET }}-gcc-${{ matrix.GCC }}" \
+            CFLAGS="-O2"
+          make -j$(nproc)
+          install -D -m 0644 loongarch64-unknown-linux-gnu/.libs/libffi.a \
+            "$GITHUB_WORKSPACE/bin/libs/native/linux/loong64/org/lwjgl/libffi.a"
+      - name: Restore kotlinc output
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            bin/classes/generator
+            bin/classes/templates
+          key: cache-kotlinc-${{ github.sha }}
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
+      - name: Generate bindings
+        run: ant -emacs clean-generated generate
+      - name: Build Java
+        run: ant -emacs compile
+      - name: Build native
+        run: ant -emacs compile-native -Dgcc.version=${{matrix.GCC}} -Dgcc.version.print=true -Dgcc.libpath.opengl=/usr/lib/${{matrix.TRIPLET}}/mesa
+      - name: Upload Linux natives
+        uses: actions/upload-artifact@v7
+        with:
+          name: natives-linux-${{ matrix.ARCH }}
+          path: bin/libs/native/
+          if-no-files-found: error
+
+  release:
+    name: Release
+    needs: [cache-kotlinc, linux, linux-cross]
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    env:
+      ANT_OPTS: -Xmx8G
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 3
+          persist-credentials: false
+      - uses: gradle/actions/wrapper-validation@3f131e8634966bd73d06cc69884922b02e6faf92 #v6.2.0
+      - name: Retrieve version & build number
+        run: |
+          LWJGL_VERSION=$(cat gradle.properties | grep lwjglVersion= | cut -d= -f2)
+          echo "LWJGL_VERSION=$LWJGL_VERSION" >> $GITHUB_ENV
+          echo "LWJGL_BUILD=$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
+      - name: Setup Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: 'zulu'
+          java-version: |
+            27-ea
+            25
+            8
+          check-latest: true
+      - name: Install dependencies
+        run: |
+          git clone https://github.com/LWJGL-CI/OculusSDK.git ../OculusSDK
+          echo "JAVA8_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+      - name: Restore kotlinc output
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            bin/classes/generator
+            bin/classes/templates
+          key: cache-kotlinc-${{ github.sha }}
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
+      - name: Download all Linux natives
+        uses: actions/download-artifact@v8
+        with:
+          pattern: natives-linux-*
+          path: bin/libs/native/
+          merge-multiple: true
+      - name: Generate bindings
+        run: ant -emacs clean-generated generate
+      - name: Build Java
+        run: ant -emacs compile
+      - name: "Package ${{ env.LWJGL_VERSION }}+${{ env.LWJGL_BUILD }}"
+        env:
+          LWJGL_BUILD_OFFLINE: 'true'
+        run: |
+          export JAVA_HOME=$JAVA_HOME_27_X64
+          ant -emacs release -Dcore.java27=true -Dbuild.version=${{ env.LWJGL_VERSION }} -Dbuild.revision=${{ env.LWJGL_BUILD }}
+          $JAVA_HOME/bin/jar cfM lwjgl.zip -C bin/RELEASE .
+          mv lwjgl.zip lwjgl-${{ env.LWJGL_VERSION }}.zip
+          find bin/RELEASE -type f -name '*-javadoc.jar' -delete
+          "$JAVA_HOME/bin/jar" cfM "lwjgl-no-javadoc.zip" -C bin/RELEASE .
+          mv lwjgl-no-javadoc.zip lwjgl-${{ env.LWJGL_VERSION }}-no-javadoc.zip
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if ! gh release view "${{ github.ref_name }}" >/dev/null 2>&1; then
+            gh release create "${{ github.ref_name }}" -R ${{ github.repository }} --generate-notes
+          fi
+          gh release upload "$RELEASE_TAG" \
+            "lwjgl-$LWJGL_VERSION.zip" \
+            "lwjgl-$LWJGL_VERSION-no-javadoc.zip" --clobber

@@ -37,7 +37,7 @@ This script is included in /build.xml and /config/update-dependencies.xml.
 
         By default, os.arch of the JVM that runs ANT is used, but this can be overridden for cross-compiling to another architecture.
 
-        Valid values: x64, x86, arm64, arm32
+        Valid values: x64, x86, arm64, arm32, ppc64le, loong64, riscv64
     -->
     <property name="build.arch" value="${env.LWJGL_BUILD_ARCH}" if:set="env.LWJGL_BUILD_ARCH"/>
 
@@ -55,6 +55,12 @@ This script is included in /build.xml and /config/update-dependencies.xml.
             <contains string="${os.arch}"    substring="aarch64"/>
         </or>
     </condition>
+    <condition property="build.arch.loong" value="true">
+        <or>
+            <contains string="${build.arch}" substring="loong"/>
+            <contains string="${os.arch}"    substring="loongarch64"/>
+        </or>
+    </condition>
     <condition property="build.arch.ppc" value="true">
         <or>
             <contains string="${build.arch}" substring="ppc"/>
@@ -70,6 +76,7 @@ This script is included in /build.xml and /config/update-dependencies.xml.
     <condition property="build.arch.x64|x86" value="true">
         <and>
             <not><isset property="build.arch.arm"/></not>
+            <not><isset property="build.arch.loong"/></not>
             <not><isset property="build.arch.ppc"/></not>
             <not><isset property="build.arch.riscv"/></not>
         </and>
@@ -78,14 +85,15 @@ This script is included in /build.xml and /config/update-dependencies.xml.
     <!-- Normalize os.arch -->
     <condition property="build.arch" value="arm64"      unless:set="build.arch"><and><isset property="build.arch.arm"/>    <istrue  value="${is64Bit}"/></and></condition>
     <condition property="build.arch" value="arm32"      unless:set="build.arch"><and><isset property="build.arch.arm"/>    <isfalse value="${is64Bit}"/></and></condition>
+    <condition property="build.arch" value="loong64"    unless:set="build.arch"><and><isset property="build.arch.loong"/>  <istrue  value="${is64Bit}"/></and></condition>
     <condition property="build.arch" value="ppc64le"    unless:set="build.arch"><and><isset property="build.arch.ppc"/>    <istrue  value="${is64Bit}"/></and></condition>
     <condition property="build.arch" value="riscv64"    unless:set="build.arch"><and><isset property="build.arch.riscv"/>  <istrue  value="${is64Bit}"/></and></condition>
     <condition property="build.arch" value="x64"        unless:set="build.arch"><and><isset property="build.arch.x64|x86"/><istrue  value="${is64Bit}"/></and></condition>
     <condition property="build.arch" value="x86"        unless:set="build.arch"><and><isset property="build.arch.x64|x86"/><isfalse value="${is64Bit}"/></and></condition>
     <property      name="build.arch" value="${os.arch}" unless:set="build.arch"/>
 
-    <fail message="Invalid or unsupported build architecture: ${build.arch}. Supported: x64, x86, arm64, arm32, ppc64le, riscv64">
-        <condition><not><matches string="${build.arch}" pattern="^(x64|x86|arm64|arm32|ppc64le|riscv64)$"/></not></condition>
+    <fail message="Invalid or unsupported build architecture: ${build.arch}. Supported: x64, x86, arm64, arm32, loong64, ppc64le, riscv64">
+        <condition><not><matches string="${build.arch}" pattern="^(x64|x86|arm64|arm32|loong64|ppc64le|riscv64)$"/></not></condition>
     </fail>
 
     <property name="build.arch.${build.arch}" value="true"/>
@@ -372,8 +380,8 @@ This script is included in /build.xml and /config/update-dependencies.xml.
         <attribute name="sources" default="true"/>
 
         <sequential>
-            <get-quiet name="@{name}" url="https://repo.maven.apache.org/maven2/@{group}/@{artifact}/@{version}/@{artifact}-@{version}@{classifier}.jar" dest="${lib}/java@{subfolder}/@{artifact}.jar" skipexisting="false"/>
-            <get-quiet name="@{name}" url="https://repo.maven.apache.org/maven2/@{group}/@{artifact}/@{version}/@{artifact}-@{version}-sources.jar" dest="${lib}/java@{subfolder}/@{artifact}-sources.jar" skipexisting="false" if:true="@{sources}"/>
+            <get-quiet name="@{name}" url="https://maven.aliyun.com/repository/central/@{group}/@{artifact}/@{version}/@{artifact}-@{version}@{classifier}.jar" dest="${lib}/java@{subfolder}/@{artifact}.jar" skipexisting="false"/>
+            <get-quiet name="@{name}" url="https://maven.aliyun.com/repository/central/@{group}/@{artifact}/@{version}/@{artifact}-@{version}-sources.jar" dest="${lib}/java@{subfolder}/@{artifact}-sources.jar" skipexisting="false" if:true="@{sources}"/>
         </sequential>
     </macrodef>
 
@@ -386,7 +394,7 @@ This script is included in /build.xml and /config/update-dependencies.xml.
                 <local name="dest"/>
                 <property name="dest" value="${lib.native}/${module.@{module}.path}"/>
                 <mkdir dir="${dest}"/>
-                <get-quiet name="@{module} :: @{artifact}" url="https://build.lwjgl.org/${build.type}/${platform.remote}/${build.arch}/@{artifact}" dest="${dest}" skipexisting="false"/>
+                <get-quiet name="@{module} :: @{artifact}" url="https://build.lwjgl.org/${build.type}/${platform.remote}/${build.arch}/@{artifact}" dest="${dest}" skipexisting="false" unless:set="native.deps.local"/>
             </sequential>
         </sequential>
     </macrodef>

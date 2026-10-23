@@ -68,6 +68,7 @@ public enum Platform {
         X86(false),
         ARM64(true),
         ARM32(false),
+        LOONGARCH64(true),
         PPC64LE(true),
         RISCV64(true);
 
@@ -81,6 +82,11 @@ public enum Platform {
 
             if (osArch.startsWith("arm") || osArch.startsWith("aarch")) {
                 current = is64Bit ? Architecture.ARM64 : Architecture.ARM32;
+            } else if (osArch.startsWith("loongarch")) {
+                if (!"loongarch64".equals(osArch)) {
+                    throw new UnsupportedOperationException("Only LoongArch 64 is supported.");
+                }
+                current = Architecture.LOONGARCH64;
             } else if (osArch.startsWith("ppc")) {
                 if (!"ppc64le".equals(osArch)) {
                     throw new UnsupportedOperationException("Only PowerPC 64 LE is supported.");
