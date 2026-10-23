@@ -159,7 +159,7 @@ documented just below this comment.
 #endif
 
 #if __GNUC__ || __clang__
-#if __x86_64__ || __ppc64__ || __amd64__ || __arm64__
+#if __x86_64__ || __ppc64__ || __amd64__ || __arm64__ || defined(__loongarch64)
 #define RMT_ARCH_64BIT
 #else
 #define RMT_ARCH_32BIT
