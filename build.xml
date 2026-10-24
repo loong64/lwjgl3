@@ -1661,8 +1661,11 @@
                 <get-release platform="linux" arch="ppc64le" file="libdraco.so"/>
 
                 <get-release platform="linux" arch="riscv64" file="libassimp.so"/>
+                <get-release platform="linux" arch="loong64" file="libassimp.so"/>
                 <get-release platform="linux" arch="riscv64" file="libassimp.so.git"/>
+                <get-release platform="linux" arch="loong64" file="libassimp.so.git"/>
                 <get-release platform="linux" arch="riscv64" file="libdraco.so"/>
+                <get-release platform="linux" arch="loong64" file="libdraco.so"/>
 
                 <get-release platform="macos" arch="x64" file="libassimp.dylib"/>
                 <get-release platform="macos" arch="x64" file="libassimp.dylib.git"/>
@@ -1717,7 +1720,9 @@
                 <get-release platform="linux" arch="ppc64le" file="libglfw.so.git"/>
 
                 <get-release platform="linux" arch="riscv64" file="libglfw.so"/>
+                <get-release platform="linux" arch="loong64" file="libglfw.so"/>
                 <get-release platform="linux" arch="riscv64" file="libglfw.so.git"/>
+                <get-release platform="linux" arch="loong64" file="libglfw.so.git"/>
 
                 <get-release platform="macos" arch="x64" file="libglfw.dylib"/>
                 <get-release platform="macos" arch="x64" file="libglfw.dylib.git"/>
@@ -1839,7 +1844,9 @@
                 <get-release platform="linux" arch="ppc64le" file="libktx.so.git"/>
 
                 <get-release platform="linux" arch="riscv64" file="libktx.so"/>
+                <get-release platform="linux" arch="loong64" file="libktx.so"/>
                 <get-release platform="linux" arch="riscv64" file="libktx.so.git"/>
+                <get-release platform="linux" arch="loong64" file="libktx.so.git"/>
 
                 <get-release platform="macos" arch="x64" file="libktx.dylib"/>
                 <get-release platform="macos" arch="x64" file="libktx.dylib.git"/>
@@ -1886,6 +1893,7 @@
                 <get-release platform="linux" arch="arm32" file="liblwjgl_nfd_portal.so"/>
                 <get-release platform="linux" arch="ppc64le" file="liblwjgl_nfd_portal.so"/>
                 <get-release platform="linux" arch="riscv64" file="liblwjgl_nfd_portal.so"/>
+                <get-release platform="linux" arch="loong64" file="liblwjgl_nfd_portal.so"/>
             </natives>
         </release-module>
 
@@ -1914,7 +1922,9 @@
                 <get-release platform="linux" arch="ppc64le" file="libopenal.so.git"/>
 
                 <get-release platform="linux" arch="riscv64" file="libopenal.so"/>
+                <get-release platform="linux" arch="loong64" file="libopenal.so"/>
                 <get-release platform="linux" arch="riscv64" file="libopenal.so.git"/>
+                <get-release platform="linux" arch="loong64" file="libopenal.so.git"/>
 
                 <get-release platform="macos" arch="x64" file="libopenal.dylib"/>
                 <get-release platform="macos" arch="x64" file="libopenal.dylib.git"/>
@@ -1961,7 +1971,9 @@
                 <get-release platform="linux" arch="ppc64le" file="libopenxr_loader.so.git"/>
 
                 <get-release platform="linux" arch="riscv64" file="libopenxr_loader.so"/>
+                <get-release platform="linux" arch="loong64" file="libopenxr_loader.so"/>
                 <get-release platform="linux" arch="riscv64" file="libopenxr_loader.so.git"/>
+                <get-release platform="linux" arch="loong64" file="libopenxr_loader.so.git"/>
 
                 <get-release platform="windows" arch="x64" file="openxr-loader.dll"/>
                 <get-release platform="windows" arch="x64" file="openxr-loader.dll.git"/>
@@ -1990,6 +2002,7 @@
                 <get-release platform="linux" arch="arm32" file="liblwjgl_remotery.so"/>
                 <get-release platform="linux" arch="ppc64le" file="liblwjgl_remotery.so"/>
                 <get-release platform="linux" arch="riscv64" file="liblwjgl_remotery.so"/>
+                <get-release platform="linux" arch="loong64" file="liblwjgl_remotery.so"/>
 
                 <get-release platform="macos" arch="x64" file="liblwjgl_remotery.dylib"/>
                 <get-release platform="macos" arch="arm64" file="liblwjgl_remotery.dylib"/>
